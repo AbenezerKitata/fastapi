@@ -1,3 +1,4 @@
+import psycopg
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import DeclarativeBase
@@ -19,3 +20,13 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+# DB_URL = "postgresql://myuser:mypassword@localhost:5432/mydatabase"
+# try:
+#     conn = psycopg.connect(DB_URL)
+#     cur = conn.cursor()  # Define the cursor object at the module level
+#     print("DB connection was successful!")
+# except Exception as e:
+#     print(f"An unexpected error occurred: {e}")
+#     exit()

@@ -1,5 +1,6 @@
-from sqlalchemy import TIMESTAMP, Boolean, Column, Integer, String
+from sqlalchemy import TIMESTAMP, Boolean, Column, Integer, String, ForeignKey
 from ..dbConnect import Base
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql.expression import text
 
 
@@ -14,3 +15,7 @@ class Media(Base):
     created_at = Column(
         TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")
     )
+    owner_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    owner = relationship("User")
