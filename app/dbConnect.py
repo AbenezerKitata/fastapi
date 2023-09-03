@@ -1,9 +1,10 @@
-import psycopg
+# import psycopg
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import DeclarativeBase
+from .config import settings
 
-DB_URL = "postgresql://myuser:mypassword@localhost:5432/mydatabase"
+DB_URL = f"postgresql://{settings.db_userName}:{settings.db_password}@{settings.db_hostname}:{settings.db_port}/{settings.db_database}"
 
 engine = create_engine(DB_URL)
 

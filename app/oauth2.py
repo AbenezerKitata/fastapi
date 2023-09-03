@@ -6,31 +6,33 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from .dbConnect import get_db
 from .models.user import User as userModel
+from .config import settings
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 # to get a string like this run:
 # openssl rand -hex 32
-SECRET_KEY = "41c99a16011e6a80576f6665b8e1ce754a580ac694660e8ee88f71f8ab80a25f"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 
 def create_access_token(data: dict):
     to_encode = data.copy()
 
-    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.utcnow() + timedelta(minutes=settings.access_token_exp_minutes)
 
     to_encode.update({"exp": expire})
 
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(
+        to_encode, settings.token_secret, algorithm=settings.algorithm
+    )
 
     return encoded_jwt
 
 
 def verify_access_token(token: str, credentials_exception):
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(
+            token, settings.token_secret, algorithms=[settings.algorithm]
+        )
 
         id: str = payload.get("user_id")
 

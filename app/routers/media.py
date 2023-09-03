@@ -3,18 +3,21 @@ from sqlalchemy.orm import Session
 from fastapi import Depends, APIRouter, status, HTTPException
 from ..dbConnect import get_db
 from typing import List, Optional
-from ..schemas.media import ReturnMedia, CreateMedia
+from ..schemas.media import MediaVotes, ReturnMedia, CreateMedia
 from ..models.media import Media
 from ..oauth2 import get_current_user
+from ..models.votes import Vote
+from sqlalchemy import func
 
 router = APIRouter(prefix="/media", tags=["Media"])
 
 
 # Get all
-@router.get("/", response_model=List[ReturnMedia])
+# @router.get("/", response_model=List[ReturnMedia])
+@router.get("/", response_model=List[MediaVotes])
 async def readMedias(
     db: Session = Depends(get_db),
-    current_user: int = Depends(get_current_user),
+    # current_user: int = Depends(get_current_user),
     limit: int = 5,
     skip: int = 0,
     title: Optional[str] = "",
@@ -22,20 +25,35 @@ async def readMedias(
     # For social media
     # allMedia = db.query(Media).all()
     # For Note taking/ more private apps
-    allMedia = (
-        db.query(Media)
-        .filter(and_(Media.title.contains(title), Media.owner_id == current_user.id))
+
+    voteResults = (
+        db.query(Media, func.count(Vote.media_id).label("votes"))
+        .join(Vote, Vote.media_id == Media.id, isouter=True)
+        .group_by(Media.id)
+        .filter(Media.title.contains(title))
         .limit(limit)
         .offset(skip)
         .all()
+        # .filter(and_(Media.title.contains(title), Media.owner_id == current_user.id))
     )
-    return allMedia
+    response = []
+    for media, votes in voteResults:
+        media_data = {"Media": media, "votes": votes}
+        response.append(media_data)
+
+    return response
 
 
 # Get one
-@router.get("/{id}", response_model=ReturnMedia)
+@router.get("/{id}", response_model=MediaVotes)
 async def getMedia(id: int, db: Session = Depends(get_db)):
-    found = db.query(Media).filter(Media.id == id).first()
+    found = (
+        db.query(Media, func.count(Vote.media_id).label("votes"))
+        .join(Vote, Vote.media_id == Media.id, isouter=True)
+        .group_by(Media.id)
+        .filter(Media.id == id)
+        .first()
+    )
 
     if found == None:
         raise HTTPException(

@@ -21,3 +21,9 @@ class ReturnMedia(BaseModel):
     created_at: datetime
     owner_id: int
     owner: ReturnUser
+
+
+class MediaVotes(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    Media: ReturnMedia
+    votes: int
